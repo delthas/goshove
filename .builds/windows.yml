@@ -1,0 +1,38 @@
+image: archlinux
+packages:
+  - pkgconf
+  - git
+  - go
+  - zip
+  - upx
+sources:
+  - https://github.com/delthas/goshove.git
+secrets:
+  - 63d7a0ac-2635-4d42-9709-efcd2cf74858 # ssh deploy key
+tasks:
+  - setup: |
+      printf '[ownstuff]\nServer = https://martchus.no-ip.biz/repo/arch/$repo/os/$arch\nSigLevel = PackageOptional\n' | sudo tee -a /etc/pacman.conf
+      sudo pacman --noconfirm -Syu mingw-w64-gcc mingw-w64-gtk3 mingw-w64-portaudio mingw-w64-opus
+      printf '[options]\nRemoteFileSigLevel = Optional\n' | sudo tee -a /etc/pacman.conf
+      sudo pacman --noconfirm -U 'https://martchus.no-ip.biz/repo/arch/ownstuff/os/x86_64/archive/mingw-w64-pango-1.42.3-1-any.pkg.tar.xz' # quick workaround for broken build on pango 1.43
+      cd goshove
+      git checkout -q $GIT_COMMIT_ID
+  - build: |
+      cd goshove
+      export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig CGO_ENABLED=1 CC=x86_64-w64-mingw32-cc GOOS=windows GOARCH=amd64 CGO_LDFLAGS_ALLOW=.*
+      go build -ldflags "-s -w" -v -o goshove.exe .
+      upx goshove.exe
+  - zip: |
+      cd goshove
+      mkdir goshove-win32
+      mv goshove.exe goshove-win32/
+      cp scripts/goshove.bat goshove-win32/
+      cp /usr/x86_64-w64-mingw32/bin/{libatk-1.0-0.dll,libbz2-1.dll,libcairo-2.dll,libcairo-gobject-2.dll,libepoxy-0.dll,libexpat-1.dll,libffi-6.dll,libfontconfig-1.dll,libfreetype-6.dll,libfribidi-0.dll,libgcc_s_seh-1.dll,libgdk_pixbuf-2.0-0.dll,libgdk-3-0.dll,libgio-2.0-0.dll,libglib-2.0-0.dll,libgmodule-2.0-0.dll,libgobject-2.0-0.dll,libgraphite2.dll,libgtk-3-0.dll,libharfbuzz-0.dll,libiconv-2.dll,libintl-8.dll,libjasper-4.dll,libjpeg-8.dll,liblzma-5.dll,libpango-1.0-0.dll,libpangocairo-1.0-0.dll,libpangoft2-1.0-0.dll,libpangowin32-1.0-0.dll,libpcre-1.dll,libpixman-1-0.dll,libpng16-16.dll,libstdc++-6.dll,libtiff-5.dll,libwinpthread-1.dll,zlib1.dll,libopus-0.dll,libportaudio-2.dll} goshove-win32/
+      mkdir -p goshove-win32/share/glib-2.0/
+      cp -R /usr/x86_64-w64-mingw32/share/glib-2.0/schemas/ goshove-win32/share/glib-2.0/
+      x86_64-w64-mingw32-strip goshove-win32/*.dll
+      zip -r9 goshove.zip goshove-win32/
+  - deploy: |
+      cd goshove
+      ssh -o StrictHostKeyChecking=no -q user@delthas.fr 'mkdir -p /srv/http/blog/goshove/windows/'
+      scp -o StrictHostKeyChecking=no -q goshove.zip user@delthas.fr:/srv/http/blog/goshove/windows/goshove.zip

@@ -1,0 +1,25 @@
+image: archlinux
+packages:
+  - pkgconf
+  - git
+  - go
+  - gcc
+  - gtk3
+  - upx
+sources:
+  - https://github.com/delthas/goshove.git
+secrets:
+  - 63d7a0ac-2635-4d42-9709-efcd2cf74858 # ssh deploy key
+tasks:
+  - setup: |
+      sudo pacman --noconfirm -U 'https://archive.archlinux.org/packages/p/pango/pango-1.42.4-1-x86_64.pkg.tar.xz' # quick workaround for broken build on pango 1.43
+      cd goshove
+      git checkout -q $GIT_COMMIT_ID
+  - build: |
+      cd goshove
+      GOARCH=amd64 go build -ldflags "-s -w" -v -o goshove .
+      upx goshove
+  - deploy: |
+      cd goshove
+      ssh -o StrictHostKeyChecking=no -q user@delthas.fr 'mkdir -p /srv/http/blog/goshove/linux/'
+      scp -o StrictHostKeyChecking=no -q goshove user@delthas.fr:/srv/http/blog/goshove/linux/goshove
