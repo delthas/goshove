@@ -20,7 +20,7 @@ tasks:
   - build: |
       cd goshove
       export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig CGO_ENABLED=1 CC=x86_64-w64-mingw32-cc GOOS=windows GOARCH=amd64 CGO_LDFLAGS_ALLOW=.*
-      go build -ldflags "-s -w" -v -o goshove.exe .
+      go build -ldflags "-s -w -H windowsgui" -v -o goshove.exe .
       upx goshove.exe
   - zip: |
       cd goshove
