@@ -20,26 +20,29 @@ tasks:
   - build: |
       cd goshove
       export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig CGO_ENABLED=1 CC=x86_64-w64-mingw32-cc GOOS=windows GOARCH=amd64 CGO_LDFLAGS_ALLOW=.*
-      go build -ldflags "-s -w -H windowsgui" -v -o goshove.exe .
+      go build -ldflags "-s -w" -v -o goshove.exe ./cmd/goshove
+      go build -ldflags "-s -w -H windowsgui" -v -o goshove-gtk.exe ./cmd/goshove-gtk
       upx goshove.exe
+      upx goshove-gtk.exe
   - zip: |
       cd goshove
-      mkdir goshove-win32
-      mv goshove.exe goshove-win32/
-      cp scripts/goshove.bat goshove-win32/
-      cp /usr/x86_64-w64-mingw32/bin/{libatk-1.0-0.dll,libbz2-1.dll,libcairo-2.dll,libcairo-gobject-2.dll,libepoxy-0.dll,libexpat-1.dll,libffi-6.dll,libfontconfig-1.dll,libfreetype-6.dll,libfribidi-0.dll,libgcc_s_seh-1.dll,libgdk_pixbuf-2.0-0.dll,libgdk-3-0.dll,libgio-2.0-0.dll,libglib-2.0-0.dll,libgmodule-2.0-0.dll,libgobject-2.0-0.dll,libgraphite2.dll,libgtk-3-0.dll,libharfbuzz-0.dll,libiconv-2.dll,libintl-8.dll,libjasper-4.dll,libjpeg-8.dll,liblzma-5.dll,libpango-1.0-0.dll,libpangocairo-1.0-0.dll,libpangoft2-1.0-0.dll,libpangowin32-1.0-0.dll,libpcre-1.dll,libpixman-1-0.dll,libpng16-16.dll,libstdc++-6.dll,libtiff-5.dll,libwinpthread-1.dll,zlib1.dll} goshove-win32/
-      mkdir -p goshove-win32/share/glib-2.0/
-      cp -R /usr/x86_64-w64-mingw32/share/glib-2.0/schemas/ goshove-win32/share/glib-2.0/
+      mkdir goshove-gtk
+      mv goshove-gtk.exe goshove-gtk/
+      cp scripts/goshove-gtk.bat goshove-gtk/
+      cp /usr/x86_64-w64-mingw32/bin/{libatk-1.0-0.dll,libbz2-1.dll,libcairo-2.dll,libcairo-gobject-2.dll,libepoxy-0.dll,libexpat-1.dll,libffi-6.dll,libfontconfig-1.dll,libfreetype-6.dll,libfribidi-0.dll,libgcc_s_seh-1.dll,libgdk_pixbuf-2.0-0.dll,libgdk-3-0.dll,libgio-2.0-0.dll,libglib-2.0-0.dll,libgmodule-2.0-0.dll,libgobject-2.0-0.dll,libgraphite2.dll,libgtk-3-0.dll,libharfbuzz-0.dll,libiconv-2.dll,libintl-8.dll,libjasper-4.dll,libjpeg-8.dll,liblzma-5.dll,libpango-1.0-0.dll,libpangocairo-1.0-0.dll,libpangoft2-1.0-0.dll,libpangowin32-1.0-0.dll,libpcre-1.dll,libpixman-1-0.dll,libpng16-16.dll,libstdc++-6.dll,libtiff-5.dll,libwinpthread-1.dll,zlib1.dll} goshove-gtk/
+      mkdir -p goshove-gtk/share/glib-2.0/
+      cp -R /usr/x86_64-w64-mingw32/share/glib-2.0/schemas/ goshove-gtk/share/glib-2.0/
 
       # quick workaround for segfault on windows in gtk_builder_add_from_string
       mkdir pixman
       curl 'http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-pixman-0.38.4-1-any.pkg.tar.xz' -o pixman.tar.xz
       tar -xf pixman.tar.xz -C pixman
-      cp pixman/mingw64/bin/libpixman-1-0.dll goshove-win32/
+      cp pixman/mingw64/bin/libpixman-1-0.dll goshove-gtk/
 
-      x86_64-w64-mingw32-strip goshove-win32/*.dll
-      zip -r9 goshove.zip goshove-win32/
+      x86_64-w64-mingw32-strip goshove-gtk/*.dll
+      zip -r9 goshove-gtk.zip goshove-gtk/
   - deploy: |
       cd goshove
       ssh -o StrictHostKeyChecking=no -q user@delthas.fr 'mkdir -p /srv/http/blog/goshove/windows/'
-      scp -o StrictHostKeyChecking=no -q goshove.zip user@delthas.fr:/srv/http/blog/goshove/windows/goshove.zip
+      scp -o StrictHostKeyChecking=no -q goshove.exe user@delthas.fr:/srv/http/blog/goshove/windows/goshove.exe
+      scp -o StrictHostKeyChecking=no -q goshove-gtk.zip user@delthas.fr:/srv/http/blog/goshove/windows/goshove-gtk.zip

@@ -17,9 +17,12 @@ tasks:
       git checkout -q $GIT_COMMIT_ID
   - build: |
       cd goshove
-      GOARCH=amd64 go build -ldflags "-s -w" -v -o goshove .
+      GOARCH=amd64 go build -ldflags "-s -w" -v -o goshove ./cmd/goshove
+      GOARCH=amd64 go build -ldflags "-s -w" -v -o goshove-gtk ./cmd/goshove-gtk
       upx goshove
+      upx goshove-gtk
   - deploy: |
       cd goshove
       ssh -o StrictHostKeyChecking=no -q user@delthas.fr 'mkdir -p /srv/http/blog/goshove/linux/'
       scp -o StrictHostKeyChecking=no -q goshove user@delthas.fr:/srv/http/blog/goshove/linux/goshove
+      scp -o StrictHostKeyChecking=no -q goshove-gtk user@delthas.fr:/srv/http/blog/goshove/linux/goshove-gtk
