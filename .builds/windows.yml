@@ -14,7 +14,6 @@ tasks:
       printf '[ownstuff]\nServer = https://martchus.no-ip.biz/repo/arch/$repo/os/$arch\nSigLevel = PackageOptional\n' | sudo tee -a /etc/pacman.conf
       sudo pacman --noconfirm -Syu mingw-w64-gcc mingw-w64-gtk3
       printf '[options]\nRemoteFileSigLevel = Optional\n' | sudo tee -a /etc/pacman.conf
-      sudo pacman --noconfirm -U 'https://martchus.no-ip.biz/repo/arch/ownstuff/os/x86_64/archive/mingw-w64-pango-1.42.3-1-any.pkg.tar.xz' # quick workaround for broken build on pango 1.43
       cd goshove
       git checkout -q $GIT_COMMIT_ID
   - build: |
